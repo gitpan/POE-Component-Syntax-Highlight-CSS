@@ -3,7 +3,7 @@ package POE::Component::Syntax::Highlight::CSS;
 use warnings;
 use strict;
 
-our $VERSION = '0.0101';
+our $VERSION = '0.0102';
 
 use POE;
 use base 'POE::Component::NonBlockingWrapper::Base';
@@ -20,8 +20,8 @@ sub parse {
 sub _process_request {
     my ( $self, $in_ref ) = @_;
     my $obj = Syntax::Highlight::CSS->new(
-        ( $in_ref->{nnn} ? ( nnn => $in_ref->{nnn} ) : () ),
-        ( $in_ref->{pre} ? ( pre => $in_ref->{pre} ) : () ),
+        ( defined $in_ref->{nnn} ? ( nnn => $in_ref->{nnn} ) : () ),
+        ( defined $in_ref->{pre} ? ( pre => $in_ref->{pre} ) : () ),
     );
 
     $in_ref->{out} = $obj->parse( $in_ref->{in} );

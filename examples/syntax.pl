@@ -22,10 +22,6 @@ sub _start {
 }
 
 sub results {
-
-use Data::Dumper;
-print Dumper $_[ARG0];
-
     print "$_[ARG0]->{out}\n";
     $poco->shutdown;
 }

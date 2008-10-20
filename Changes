@@ -1,5 +1,8 @@
 Revision history for POE-Component-Syntax-Highlight-CSS
 
+0.0102  October 19, 2008
+        Fixed minor bug preventing cancelation of C<pre> argument.
+
 0.0101  October 19, 2008
         First version, released on an unsuspecting world.
 
