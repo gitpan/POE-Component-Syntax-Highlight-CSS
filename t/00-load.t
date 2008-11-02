@@ -1,8 +1,9 @@
 #!/usr/bin/env perl
 
-use Test::More tests => 4;
+use Test::More tests => 5;
 
 BEGIN {
+    use_ok('LWP::UserAgent');
     use_ok('POE');
     use_ok('POE::Component::NonBlockingWrapper::Base');
     use_ok('Syntax::Highlight::CSS');

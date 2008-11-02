@@ -1,9 +1,11 @@
 POE-Component-Syntax-Highlight-CSS
 
-The module is a non-blocking wrapper around L<Syntax::Highlight::CSS> (although the
-major intention was to create event based interface) which provides interface to
+The module is a non-blocking wrapper around L<Syntax::Highlight::CSS> with added functionality
+of fetching the CSS code to highlight from a given URI. The L<Syntax::Highlight::CSS>
+provides interface to
 highlight CSS code by wrapping syntax elements into HTML C<< <span> >> elements with
 different class names.
+.
 
 INSTALLATION
 

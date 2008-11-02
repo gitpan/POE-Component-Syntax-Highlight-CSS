@@ -11,6 +11,7 @@ WriteMakefile
                            'Test::More' => 0,
                            'Syntax::Highlight::CSS' => '0.0101',
                            'POE::Component::NonBlockingWrapper::Base' => '0.002',
+                           'LWP::UserAgent' => '2.036',
                            'POE' => '0.9999'
                          }
         )

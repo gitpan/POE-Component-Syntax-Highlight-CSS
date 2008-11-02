@@ -3,11 +3,12 @@ package POE::Component::Syntax::Highlight::CSS;
 use warnings;
 use strict;
 
-our $VERSION = '0.0102';
+our $VERSION = '0.0202';
 
 use POE;
 use base 'POE::Component::NonBlockingWrapper::Base';
 use Syntax::Highlight::CSS;
+use LWP::UserAgent;
 
 sub _methods_define {
     return ( parse => '_wheel_entry' );
@@ -24,7 +25,23 @@ sub _process_request {
         ( defined $in_ref->{pre} ? ( pre => $in_ref->{pre} ) : () ),
     );
 
-    $in_ref->{out} = $obj->parse( $in_ref->{in} );
+    if ( $in_ref->{uri} ) {
+        $in_ref->{uri} =~ m{^(?:ht|f)tps?://}
+            or $in_ref->{uri} = "http://$in_ref->{uri}";
+
+        my $ua = $self->{ua} || LWP::UserAgent->new( timeout => 30, agent => 'Opera 9.5' );
+        my $response = $ua->get( $in_ref->{uri} );
+
+        if ( $response->is_success ) {
+            $in_ref->{out} = $obj->parse( $response->content );
+        }
+        else {
+            $in_ref->{error} = $response->status_line;
+        }
+    }
+    else {
+        $in_ref->{out} = $obj->parse( $in_ref->{in} );
+    }
 }
 
 1;
@@ -63,8 +80,9 @@ Using event based interface is also possible of course.
 
 =head1 DESCRIPTION
 
-The module is a non-blocking wrapper around L<Syntax::Highlight::CSS> (although the
-major intention was to create event based interface) which provides interface to
+The module is a non-blocking wrapper around L<Syntax::Highlight::CSS> with added functionality
+of fetching the CSS code to highlight from a given URI. The L<Syntax::Highlight::CSS>
+provides interface to
 highlight CSS code by wrapping syntax elements into HTML C<< <span> >> elements with
 different class names.
 
@@ -76,6 +94,7 @@ different class names.
 
     POE::Component::Syntax::Highlight::CSS->spawn(
         alias => 'highlighter',
+        ua  => LWP::UserAgent->new( timeout => 30, agent => 'Opera 9.5' ),
         options => {
             debug => 1,
             trace => 1,
@@ -93,6 +112,19 @@ I<all of which are optional>. The possible arguments are as follows:
     ->spawn( alias => 'highlighter' );
 
 B<Optional>. Specifies a POE Kernel alias for the component.
+
+=head3 C<ua>
+
+    ->spawn( ua  => LWP::UserAgent->new( timeout => 30, agent => 'Opera 9.5' ) );
+
+B<Optional>. The C<ua> argument takes an L<LWP::UserAgent>-like object as a value, the object
+must have a C<get()> method that returns L<HTTP::Response> object and takes a URI to fetch
+as the first argument. B<Default to:>
+
+    LWP::UserAgent->new(
+        timeout => 30,
+        agent   => 'Opera 9.5',
+    );
 
 =head3 C<options>
 
@@ -121,6 +153,9 @@ C<0>.
 
     $poco->parse( {
             event       => 'event_for_output',
+            uri         => 'http://zoffix.com/main.css',
+                # or
+            in          => 'a:hover { font-weight: bold; }',
             nnn         => 1,
             pre         => 1,
             _blah       => 'pooh!',
@@ -149,6 +184,8 @@ Takes no arguments. Shuts down the component.
 
     $poe_kernel->post( highlighter => parse => {
             event       => 'event_for_output',
+            uri         => 'http://zoffix.com/main.css',
+                # or
             in          => 'a:hover { font-weight: bold; }',
             nnn         => 1,
             pre         => 1,
@@ -167,11 +204,20 @@ argument, the possible keys/value of that hashref are as follows:
 B<Mandatory>. Specifies the name of the event to emit when results are
 ready. See OUTPUT section for more information.
 
+=head3 C<uri>
+
+    { uri => 'http://zoffix.com/' }
+
+B<Optional> if C<in> argument is set. Takes a URI as a value, that uri must point to CSS
+code you wish to highlight.
+
 =head3 C<in>
 
     { in => 'a:hover { font-weight: bold; }', }
 
-B<Mandatory>. Takes a string as a value which represents CSS code to syntax-highlight.
+B<Optional> if C<uri> argument is set.
+Takes a string as a value which represents CSS code to syntax-highlight. If C<uri> argument
+is specified then the C<in> argument is ignored.
 
 =head3 C<nnn>
 
@@ -243,11 +289,23 @@ The C<out> key will contain a string representing highlighted CSS code. See
 documentation for L<Syntax::Highlight::CSS> for explanation of each of the possible
 C<class=""> names on the generated C<< <span> >>s.
 
-=head2 C<in>
+=head2 C<in> and C<uri>
 
     { 'in' => 'a:hover { font-weight: bold; }', }
 
-The C<in> key will contain the original CSS code.
+    { 'uri' => 'http://zoffix.com' }
+
+If C<in> argument was specified to C<parse> event/method the C<in> key
+will contain the original CSS code.
+If C<uri> argument was specified the C<uri> key will contain the original URI.
+
+=head2 C<error>
+
+    { 'error' => '404 Not Found' }
+
+If you are using the C<uri> argument to C<parse> event/method then there is a chance for
+a network error to occur while the module is fetching the CSS code. If that's the case then
+the C<error> key will be present and its value will be a human parsable error message.
 
 =head2 C<nnn> and C<pre>
 

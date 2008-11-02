@@ -1,5 +1,8 @@
 Revision history for POE-Component-Syntax-Highlight-CSS
 
+0.0202  November 1, 2008
+        Added an option to fetch CSS code from a URI
+
 0.0102  October 19, 2008
         Fixed minor bug preventing cancelation of C<pre> argument.
 
